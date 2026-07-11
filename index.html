@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercy Seat Royal Schools - Attendance Portal</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(function() { console.log('Offline PWA Mode Active!'); })
+                .catch(function(err) { console.log('PWA setup error: ', err); });
+        }
+    </script>
+    
+    <style>
+        /* ... rest of your CSS styling ... */
+    </style>
+</head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 460px;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            border-top: 10px solid #1a365d;
+            border-bottom: 6px solid #c53030;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+        .header-layout {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        .school-logo {
+            width: 75px;
+            height: 75px;
+            object-fit: contain;
+            flex-shrink: 0;
+            border-radius: 6px;
+        }
+        .header-text {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .header-text h1 {
+            color: #1a365d;
+            font-size: 20px;
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+        .header-text p {
+            color: #718096;
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .btn-submit {
+            width: 100%;
+            background-color: #1a365d;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .status-badge {
+            margin-top: 15px;
+            padding: 12px;
+            text-align: center;
+            font-weight: 700;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+        }
+        .early { background-color: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+        .late { background-color: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+
+        .admin-auth-box {
+            border-top: 2px dashed #e2e8f0;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        .admin-input {
+            border: 2px solid #cbd5e0;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        
+        /* Change Password Settings Styling */
+        .password-settings-box {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        .password-settings-box h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #2c5282;
+        }
+        .btn-action {
+            width: 100%;
+            border: none;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .btn-blue { background-color: #2b6cb0; color: white; margin-bottom: 8px; }
+        .btn-reset { background-color: #c53030; color: white; }
+
+        .dashboard-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 850px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            box-sizing: border-box;
+            display: none;
+            margin-top: 20px;
+        }
+        .dashboard-container h2 {
+            color: #1a365d;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 3px double #edf2f7;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+        .week-bracket {
+            margin-bottom: 35px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .week-header {
+            background-color: #1a365d;
+            color: white;
+            padding: 10px 15px;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 650px;
+        }
+        th {
+            background-color: #f7fafc;
+            color: #4a5568;
+            padding: 10px;
+            font-weight: 700;
+            text-align: left;
+            border-bottom: 2px solid #edf2f7;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+        .badge {
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .badge-early { background-color: #c6f6d5; color: #22543d; }
+        .badge-late { background-color: #fed7d7; color: #742a2a; }
+        .badge-perfect { background-color: #feebc8; color: #c05621; border: 1px solid #fbd38d; margin-left: 5px; display: inline-block; }
+        .empty-row-msg {
+            color: #a0aec0;
+            font-style: italic;
+            padding: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header-layout">
+        <img src="logo_left.png.png" onerror="this.onerror=null; this.src='logo_left.jpg';" alt="Left Logo" class="school-logo">
+        <div class="header-text">
+            <h1>Mercy Seat</h1>
+            <p>Royal Schools Portal</p>
+        </div>
+        <img src="logo_right.jpg.jpg" onerror="this.onerror=null; this.src='logo_right.jpg';" alt="Right Logo" class="school-logo">
+    </div>
+
+    <form id="attendanceForm">
+        <div class="form-group">
+            <label for="schoolSection">Select School Section:</label>
+            <select id="schoolSection" required>
+                <option value="" disabled selected>-- Choose Section --</option>
+                <option value="Primary School">Primary School</option>
+                <option value="Secondary School">Secondary School</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="teacherName">Type Your Full Name:</label>
+            <input type="text" id="teacherName" placeholder="Enter full name..." required>
+        </div>
+
+        <button type="submit" class="btn-submit">Secure Clock In</button>
+    </form>
+
+    <div id="statusResult" class="status-badge"></div>
+
+    <div class="admin-auth-box">
+        <label for="adminPass">🔑 Admin Ledger Access:</label>
+        <input type="password" id="adminPass" class="admin-input" placeholder="••••••••" oninput="checkAdminPassword()">
+        
+        <div id="passwordSettings" class="password-settings-box">
+            <h3>⚙️ Admin Management Console</h3>
+            <div class="form-group">
+                <input type="password" id="oldPass" placeholder="Enter Current Password" style="padding:8px; font-size:13px; margin-bottom:5px;">
+                <input type="password" id="newPass" placeholder="Enter New Password" style="padding:8px; font-size:13px; margin-bottom:5px;">
+                <button type="button" class="btn-action btn-blue" onclick="changeAdminPassword()">Update Admin Password</button>
+            </div>
+            <button type="button" class="btn-action btn-reset" onclick="resetTermData()">🧹 Clear and Reset Term Data</button>
+        </div>
+    </div>
+</div>
+
+<div id="adminDashboard" class="dashboard-container">
+    <h2>📊 Term Attendance Matrix Ledger (14 Weeks)</h2>
+    <div id="weeksContainer"></div>
+</div>
+
+<script>
+    // System reads saved password from memory or defaults to 'mercy123'
+    if (!localStorage.getItem('admin_secret_key')) {
+        localStorage.setItem('admin_secret_key', 'mercy123');
+    }
+
+    function buildFourteenWeeksUI() {
+        var container = document.getElementById('weeksContainer');
+        container.innerHTML = '';
+        
+        for (var w = 1; w <= 14; w++) {
+            var weekBox = document.createElement('div');
+            weekBox.className = 'week-bracket';
+            
+            var html = '<div class="week-header">Week ' + w + '</div>' +
+                       '<div class="table-wrapper">' +
+                       '<table>' +
+                       '<thead>' +
+                       '<tr>' +
+                       '<th>Date</th>' +
+                       '<th>Day</th>' +
+                       '<th>Section</th>' +
+                       '<th>Teacher\'s Name</th>' +
+                       '<th>Time</th>' +
+                       '<th>Status</th>' +
+                       '</tr>' +
+                       '</thead>' +
+                       '<tbody id="week-rows-' + w + '">' +
+                       '<tr><td colspan="6" class="empty-row-msg">No logs recorded for Week ' + w + ' yet.</td></tr>' +
+                       '</tbody>' +
+                       '</table>' +
+                       '</div>';
+                       
+            weekBox.innerHTML = html;
+            container.appendChild(weekBox);
+        }
+    }
+    buildFourteenWeeksUI();
+
+    function getTermWeekNumber(recordDateObj) {
+        var startTermDate = localStorage.getItem('term_start_anchor');
+        if (!startTermDate) {
+            startTermDate = new Date().getTime();
+            localStorage.setItem('term_start_anchor', startTermDate);
+        }
+        
+        var diffMs = recordDateObj.getTime() - parseInt(startTermDate);
+        var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        var calculatedWeek = Math.floor(diffDays / 7) + 1;
+        
+        if (calculatedWeek < 1) return 1;
+        if (calculatedWeek > 14) return 14; 
+        return calculatedWeek;
+    }
+
+    function checkAdminPassword() {
+        var enteredPass = document.getElementById('adminPass').value;
+        var dashboard = document.getElementById('adminDashboard');
+        var settingsBox = document.getElementById('passwordSettings');
+        var currentSystemPass = localStorage.getItem('admin_secret_key');
+        
+        if (enteredPass === currentSystemPass) {
+            dashboard.style.display = 'block';
+            settingsBox.style.display = 'block';
+            renderLedgerRecords();
+            dashboard.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            dashboard.style.display = 'none';
+            settingsBox.style.display = 'none';
+        }
+    }
+
+    function changeAdminPassword() {
+        var currentSystemPass = localStorage.getItem('admin_secret_key');
+        var oldInput = document.getElementById('oldPass').value;
+        var newInput = document.getElementById('newPass').value.trim();
+
+        if (oldInput !== currentSystemPass) {
+            alert("Error: The current password you entered is incorrect!");
+            return;
+        }
+        if (newInput.length < 4) {
+            alert("Error: New password must be at least 4 characters long.");
+            return;
+        }
+
+        localStorage.setItem('admin_secret_key', newInput);
+        document.getElementById('adminPass').value = newInput;
+        document.getElementById('oldPass').value = '';
+        document.getElementById('newPass').value = '';
+        alert("Success! Password updated securely.");
+        checkAdminPassword();
+    }
+
+    function resetTermData() {
+        if (confirm("Are you sure you want to clear all attendance records? This will clear everything for the new term.")) {
+            localStorage.removeItem('attendance_vault');
+            localStorage.setItem('term_start_anchor', new Date().getTime());
+            renderLedgerRecords();
+            alert("Attendance logs cleared successfully. Ready for the new term!");
+        }
+    }
+
+    function renderLedgerRecords() {
+        for (var w = 1; w <= 14; w++) {
+            document.getElementById('week-rows-' + w).innerHTML = 
+                '<tr><td colspan="6" class="empty-row-msg">No logs recorded for Week ' + w + ' yet.</td></tr>';
+        }
+
+        var localLedger = JSON.parse(localStorage.getItem('attendance_vault')) || [];
+        var weekCounters = {};
+        var structuralMap = {};
+
+        localLedger.forEach(function(rec) {
+            var recDate = new Date(rec.timestamp || new Date());
+            var wNum = getTermWeekNumber(recDate);
+            if (!structuralMap[wNum]) {
+                structuralMap[wNum] = {};
+            }
+            if (!structuralMap[wNum][rec.teacher]) {
+                structuralMap[wNum][rec.teacher] = { hasLate: false, entryCount: 0 };
+            }
+            structuralMap[wNum][rec.teacher].entryCount++;
+            if (rec.status === 'Late') {
+                structuralMap[wNum][rec.teacher].hasLate = true;
+            }
+        });
+
+        for (var i = localLedger.length - 1; i >= 0; i--) {
+            var record = localLedger[i];
+            var recordDate = new Date(record.timestamp || new Date());
+            var weekNum = getTermWeekNumber(recordDate);
+            
+            var tbody = document.getElementById('week-rows-' + weekNum);
+            
+            if (!weekCounters[weekNum]) {
+                tbody.innerHTML = '';
+                weekCounters[weekNum] = true;
+            }
+            
+            var row = document.createElement('tr');
+            var badgeClass = record.status === 'Early' ? 'badge badge-early' : 'badge badge-late';
+            
+            var perfectBadgeHtml = '';
+            if (structuralMap[weekNum] && structuralMap[weekNum][record.teacher]) {
+                var stats = structuralMap[weekNum][record.teacher];
+                if (!stats.hasLate && stats.entryCount >= 1) {
+                    perfectBadgeHtml = '<span class="badge badge-perfect">Early All Week 🌟</span>';
+                }
+            }
+            
+            row.innerHTML = '<td>' + record.date + '</td>' +
+                            '<td>' + record.day + '</td>' +
+                            '<td>' + record.section + '</td>' +
+                            '<td><strong>' + record.teacher + '</strong>' + perfectBadgeHtml + '</td>' +
+                            '<td>' + record.time + '</td>' +
+                            '<td><span class="' + badgeClass + '">' + record.status + '</span></td>';
+            tbody.appendChild(row);
+        }
+    }
+
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        var section = document.getElementById('schoolSection').value;
+        var name = document.getElementById('teacherName').value.trim();
+        
+        // Automated Device Tracking Core Logic
+        var deviceDate = new Date();
+        var currentHour = deviceDate.getHours();
+        var currentMinute = deviceDate.getMinutes();
+
+        // Strict 3:15 PM Lockout Check (15:15 in 24-hour time)
+        if (currentHour > 15 || (currentHour === 15 && currentMinute >= 15)) {
+            alert("Portal Locked: It is past 3:15 PM. The shift has ended and logging out is initiated.");
+            document.getElementById('teacherName').value = '';
+            return;
+        }
+        
+        var daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        var currentDayName = daysList[deviceDate.getDay()];
+        var currentDateString = deviceDate.toLocaleDateString();
+
+        // Convert 24-hour phone clock format into readable standard display strings
+        var suffix = currentHour >= 12 ? "PM" : "AM";
+        var displayHour = currentHour % 12;
+        displayHour = displayHour ? displayHour : 12; 
+        var displayMinute = currentMinute < 10 ? "0" + currentMinute : currentMinute;
+        var systemFormattedTime = displayHour + ":" + displayMinute + " " + suffix;
+
+        // Morning Early-Cutoff Window Logic Check (Early if checked in up to 7:30 AM)
+        var status = "Late";
+        if (suffix === "AM" && (currentHour < 7 || (currentHour === 7 && currentMinute <= 30))) {
+            status = "Early";
+        }
+        
+        var resultBadge = document.getElementById('statusResult');
+        if (status === "Late") {
+            resultBadge.className = "status-badge late";
+            resultBadge.innerText = name + " logged LATE at " + systemFormattedTime;
+        } else {
+            resultBadge.className = "status-badge early";
+            resultBadge.innerText = name + " logged EARLY at " + systemFormattedTime;
+        }
+        resultBadge.style.display = "block";
+        
+        var record = {
+            date: currentDateString,
+            day: currentDayName,
+            section: section,
+            teacher: name,
+            time: systemFormattedTime,
+            status: status,
+            timestamp: deviceDate.getTime()
+        };
+        
+        var localLedger = JSON.parse(localStorage.getItem('attendance_vault')) || [];
+        localLedger.push(record);
+        localStorage.setItem('attendance_vault', JSON.stringify(localLedger));
+        
+        var currentSystemPass = localStorage.getItem('admin_secret_key');
+        if (document.getElementById('adminPass').value === currentSystemPass) {
+            renderLedgerRecords();
+        }
+        
+        document.getElementById('teacherName').value = '';
+    });
+</script>
+
+</body>
+</html>
