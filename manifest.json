@@ -1,0 +1,17 @@
+{
+  "name": "Mercy Seat Royal School Attendance",
+  "short_name": "MSRS Portal",
+  "description": "Official offline-ready teacher attendance clock-in system.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme-color": "#1a365d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
